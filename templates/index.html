@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotional Chess - Multiplayer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .game-area {
+            flex: 1;
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            border-bottom: 2px solid #4ecdc4;
+            padding-bottom: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .status.waiting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.in-progress {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.finished {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .player-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .player {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .player-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 480px;
+            height: 480px;
+            margin: 20px auto;
+            border: 3px solid #333;
+        }
+        
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .square:hover {
+            background: rgba(255, 255, 0, 0.3) !important;
+        }
+        
+        .square.selected {
+            background: rgba(0, 255, 0, 0.5) !important;
+        }
+        
+        .square.possible-move {
+            background: rgba(0, 0, 255, 0.3) !important;
+        }
+        
+        .light-square {
+            background: #f0d9b5;
+        }
+        
+        .dark-square {
+            background: #b58863;
+        }
+        
+        .emotions-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .emotion {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 Emotional Chess</h1>
+            <p>Multiplayer Chess with Love ❤️, Anger 😡, and Sadness 😢</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <!-- Game Creation/Joining -->
+                <div class="section">
+                    <h3>🎮 Game Setup</h3>
+                    <div id="game-setup">
+                        <div class="form-group">
+                            <label for="player-name">Your Name:</label>
+                            <input type="text" id="player-name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="game-name">Game Name:</label>
+                            <input type="text" id="game-name" placeholder="Enter game name">
+                        </div>
+                        <div class="form-group">
+                            <label for="max-players">Max Players:</label>
+                            <select id="max-players">
+                                <option value="2">2 Players</option>
+                                <option value="3">3 Players</option>
+                                <option value="4">4 Players</option>
+                                <option value="5">5 Players</option>
+                                <option value="6">6 Players</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="createGame()">Create Game</button>
+                        <button class="btn" onclick="joinGame()">Join Game</button>
+                    </div>
+                </div>
+                
+                <!-- Game Status -->
+                <div class="section">
+                    <h3>📊 Game Status</h3>
+                    <div id="game-status" class="status waiting">
+                        Waiting to join a game...
+                    </div>
+                </div>
+                
+                <!-- Players -->
+                <div class="section">
+                    <h3>👥 Players</h3>
+                    <div id="players-list" class="player-list">
+                        <p>No players yet</p>
+                    </div>
+                </div>
+                
+                <!-- Emotions -->
+                <div class="section emotions-panel">
+                    <h3>💝 Emotions</h3>
+                    <div id="emotions-display">
+                        <div class="emotion">
+                            <span>❤️ Love Pairs:</span>
+                            <span id="love-count">0</span>
+                        </div>
+                        <div class="emotion">
+                            <span>😡 Angry Pieces:</span>
+                            <span id="anger-count">0</span>
+                        </div>
+                        <div class="emotion">
+                            <span>😢 Sad Pieces:</span>
+                            <span id="sad-count">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Game Controls -->
+                <div class="section" id="game-controls" class="hidden">
+                    <h3>🎯 Game Controls</h3>
+                    <button class="btn" onclick="startGame()" id="start-btn" disabled>Start Game</button>
+                    <button class="btn btn-danger" onclick="leaveGame()">Leave Game</button>
+                </div>
+            </div>
+            
+            <div class="game-area">
+                <!-- Chess Board -->
+                <div id="chess-board" class="chess-board">
+                    <!-- Board will be generated by JavaScript -->
+                </div>
+                
+                <!-- Move Input -->
+                <div id="move-input" class="hidden">
+                    <div class="form-group">
+                        <label for="move-notation">Enter Move (e.g., e4, Nf3, O-O):</label>
+                        <input type="text" id="move-notation" placeholder="Enter move notation">
+                        <button class="btn" onclick="makeMove()">Make Move</button>
+                    </div>
+                </div>
+                
+                <!-- Messages -->
+                <div id="messages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let socket;
+        let currentGame = null;
+        let currentPlayer = null;
+        let selectedSquare = null;
+        let possibleMoves = [];
+
+        // Initialize the application
+        function init() {
+            socket = io();
+            setupSocketEvents();
+            generateChessBoard();
+        }
+
+        // Setup WebSocket events
+        function setupSocketEvents() {
+            socket.on('connected', (data) => {
+                showMessage('Connected to server', 'success');
+            });
+
+            socket.on('error', (data) => {
+                showMessage('Error: ' + data.message, 'error');
+            });
+
+            socket.on('joined_room', (data) => {
+                showMessage('Joined game room', 'success');
+            });
+
+            socket.on('game_state', (data) => {
+                updateGameState(data);
+            });
+
+            socket.on('move_made', (data) => {
+                showMessage(`${data.player_id} played ${data.move}`, 'info');
+                updateGameState(data.game);
+                updateEmotions(data.emotions);
+            });
+
+            socket.on('game_started', (data) => {
+                showMessage('Game started!', 'success');
+                updateGameState(data.game);
+            });
+
+            socket.on('game_ended', (data) => {
+                showMessage(`Game ended! Winner: ${data.winner || 'Draw'}`, 'info');
+                updateGameState(data.game);
+            });
+        }
+
+        // Generate chess board
+        function generateChessBoard() {
+            const board = document.getElementById('chess-board');
+            board.innerHTML = '';
+            
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+            
+            for (let rank = 0; rank < 8; rank++) {
+                for (let file = 0; file < 8; file++) {
+                    const square = document.createElement('div');
+                    const squareName = files[file] + ranks[rank];
+                    square.id = squareName;
+                    square.className = `square ${(rank + file) % 2 === 0 ? 'light-square' : 'dark-square'}`;
+                    square.onclick = () => handleSquareClick(squareName);
+                    board.appendChild(square);
+                }
+            }
+        }
+
+        // Handle square clicks
+        function handleSquareClick(squareName) {
+            if (!currentGame || currentGame.status !== 'in_progress') return;
+            
+            if (selectedSquare === squareName) {
+                // Deselect
+                selectedSquare = null;
+                clearHighlights();
+                return;
+            }
+            
+            if (selectedSquare) {
+                // Try to make move
+                const move = selectedSquare + squareName;
+                makeMove(move);
+            } else {
+                // Select square
+                selectedSquare = squareName;
+                highlightSquare(squareName);
+            }
+        }
+
+        // Highlight square
+        function highlightSquare(squareName) {
+            clearHighlights();
+            const square = document.getElementById(squareName);
+            square.classList.add('selected');
+        }
+
+        // Clear highlights
+        function clearHighlights() {
+            document.querySelectorAll('.square').forEach(square => {
+                square.classList.remove('selected', 'possible-move');
+            });
+        }
+
+        // Create a new game
+        function createGame() {
+            const playerName = document.getElementById('player-name').value;
+            const gameName = document.getElementById('game-name').value;
+            const maxPlayers = document.getElementById('max-players').value;
+            
+            if (!playerName) {
+                showMessage('Please enter your name', 'error');
+                return;
+            }
+            
+            fetch('/api/games', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: gameName || 'Emotional Chess Game',
+                    max_players: parseInt(maxPlayers)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    joinGameById(data.game_id, playerName);
+                } else {
+                    showMessage('Error creating game: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error, 'error');
+            });
+        }
+
+        // Join a game
+        function joinGame() {
+            const playerName = document.getElementById('player-name').value;
+            const gameId = prompt('Enter Game ID:');
+            
+            if (!playerName || !gameId) {
+                showMessage('Please enter your name and game ID', 'error');
+                return;
+            }
+            
+            joinGameById(gameId, playerName);
+        }
+
+        // Join game by ID
+        function joinGameById(gameId, playerName) {
+            fetch(`/api/games/${gameId}/join`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: playerName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentGame = data.game;
+                    currentPlayer = {
+                        id: data.player_id,
+                        color: data.color
+                    };
+                    
+                    socket.emit('join_game_room', {
+                        game_id: gameId,
+                        player_id: data.player_id
+                    });
+                    
+                    updateGameState(data.game);
+                    showMessage(`Joined game as ${data.color}`, 'success');
+                } else {
+                    showMessage('Error joining game: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error, 'error');
+            });
+        }
+
+        // Start the game
+        function startGame() {
+            if (!currentGame) return;
+            
+            socket.emit('start_game', {
+                game_id: currentGame.id
+            });
+        }
+
+        // Make a move
+        function makeMove(move) {
+            if (!currentGame || !currentPlayer) return;
+            
+            const moveNotation = move || document.getElementById('move-notation').value;
+            if (!moveNotation) return;
+            
+            socket.emit('make_move', {
+                game_id: currentGame.id,
+                player_id: currentPlayer.id,
+                move: moveNotation
+            });
+            
+            document.getElementById('move-notation').value = '';
+            selectedSquare = null;
+            clearHighlights();
+        }
+
+        // Leave the game
+        function leaveGame() {
+            if (!currentPlayer) return;
+            
+            fetch(`/api/players/${currentPlayer.id}/leave`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentGame = null;
+                    currentPlayer = null;
+                    updateGameState(null);
+                    showMessage('Left the game', 'info');
+                }
+            });
+        }
+
+        // Update game state
+        function updateGameState(game) {
+            currentGame = game;
+            
+            if (!game) {
+                document.getElementById('game-status').textContent = 'Not in a game';
+                document.getElementById('game-status').className = 'status waiting';
+                document.getElementById('players-list').innerHTML = '<p>No players yet</p>';
+                document.getElementById('game-controls').classList.add('hidden');
+                document.getElementById('move-input').classList.add('hidden');
+                return;
+            }
+            
+            // Update status
+            const statusElement = document.getElementById('game-status');
+            statusElement.textContent = `Game: ${game.name} (${game.status})`;
+            statusElement.className = `status ${game.status.replace('_', '-')}`;
+            
+            // Update players
+            const playersList = document.getElementById('players-list');
+            playersList.innerHTML = '';
+            game.players.forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player';
+                playerDiv.innerHTML = `
+                    <div style="display: flex; align-items: center;">
+                        <div class="player-color" style="background: ${getColorCode(player.color)}"></div>
+                        <span>${player.name}</span>
+                    </div>
+                    <span>${player.status}</span>
+                `;
+                playersList.appendChild(playerDiv);
+            });
+            
+            // Update controls
+            const startBtn = document.getElementById('start-btn');
+            if (game.status === 'waiting' && game.players.length >= 2) {
+                startBtn.disabled = false;
+                document.getElementById('game-controls').classList.remove('hidden');
+            } else {
+                startBtn.disabled = true;
+            }
+            
+            // Show move input if game is in progress and it's player's turn
+            if (game.status === 'in_progress' && currentPlayer) {
+                const currentPlayerColor = game.current_player;
+                if (currentPlayer.color === currentPlayerColor) {
+                    document.getElementById('move-input').classList.remove('hidden');
+                } else {
+                    document.getElementById('move-input').classList.add('hidden');
+                }
+            }
+            
+            // Update emotions
+            if (game.emotions) {
+                updateEmotions(game.emotions);
+            }
+        }
+
+        // Update emotions display
+        function updateEmotions(emotions) {
+            document.getElementById('love-count').textContent = emotions.love_pairs;
+            document.getElementById('anger-count').textContent = emotions.angry;
+            document.getElementById('sad-count').textContent = emotions.sad;
+        }
+
+        // Get color code for display
+        function getColorCode(color) {
+            const colors = {
+                'white': '#ffffff',
+                'black': '#000000',
+                'red': '#ff0000',
+                'blue': '#0000ff',
+                'green': '#00ff00',
+                'yellow': '#ffff00'
+            };
+            return colors[color] || '#cccccc';
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            messagesDiv.appendChild(messageDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+

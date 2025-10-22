@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Emotional Chess Multiplayer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .board-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 400px;
+            height: 400px;
+            margin: 0 auto;
+            border: 3px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .square:hover {
+            transform: scale(1.05);
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .light {
+            background-color: #f0d9b5;
+        }
+        
+        .dark {
+            background-color: #b58863;
+        }
+        
+        .selected {
+            background-color: #ffeb3b !important;
+            box-shadow: inset 0 0 15px rgba(255, 235, 59, 0.8);
+        }
+        
+        .possible-move {
+            background-color: #4caf50 !important;
+            box-shadow: inset 0 0 10px rgba(76, 175, 80, 0.8);
+        }
+        
+        input, button {
+            padding: 12px;
+            margin: 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .emotions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .emotion-item {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        .log-move {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        
+        .log-error {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        
+        .log-info {
+            background: rgba(33, 150, 243, 0.2);
+        }
+        
+        .game-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .game-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .turn-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background: #666;
+            transition: all 0.3s ease;
+        }
+        
+        .turn-light.active {
+            background: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.8);
+        }
+        
+        .turn-light.waiting {
+            background: #ff9800;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .players-list {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .players-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        
+        .players-list li {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .player-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        
+        .player-color.white {
+            background: #fff;
+        }
+        
+        .player-color.black {
+            background: #333;
+        }
+        
+        .player-color.red {
+            background: #f44336;
+        }
+        
+        .player-color.blue {
+            background: #2196f3;
+        }
+        
+        .player-color.green {
+            background: #4caf50;
+        }
+        
+        .player-color.yellow {
+            background: #ffeb3b;
+        }
+        
+        .games-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .game-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .game-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .game-item h5 {
+            margin: 0 0 8px 0;
+            color: #fff;
+        }
+        
+        .game-item p {
+            margin: 4px 0;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .game-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .game-status.waiting {
+            background: rgba(255, 193, 7, 0.3);
+            color: #ffc107;
+        }
+        
+        .game-status.in_progress {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4caf50;
+        }
+        
+        .game-status.finished {
+            background: rgba(158, 158, 158, 0.3);
+            color: #9e9e9e;
+        }
+        
+        .lobby-controls {
+            margin-top: 15px;
+        }
+        
+        .lobby-controls button {
+            margin: 5px;
+        }
+        
+        #start-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        @media (max-width: 768px) {
+            .game-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .chess-board {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .square {
+                font-size: 18px;
+            }
+            
+            .game-item {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Emotional Chess Multiplayer</h1>
+        
+        <div class="game-section">
+            <div class="controls">
+                <h3>🎮 Game Controls</h3>
+                
+                <div id="connection-status" class="status">
+                    <strong>Status:</strong> <span id="status-text">Connecting...</span>
+                </div>
+                
+                <div id="game-setup" style="display: none;">
+                    <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+                    <input type="text" id="game-id-input" placeholder="Game ID (optional)" maxlength="36">
+                    <button onclick="createGame()">Create New Game</button>
+                    <button onclick="joinExistingGame()">Join Existing Game</button>
+                    <button onclick="listGames()">Browse Games</button>
+                </div>
+                
+                <div id="game-lobby" style="display: none;">
+                    <h4>👥 Game Lobby</h4>
+                    <div id="players-list">
+                        <p><strong>Players in game:</strong></p>
+                        <ul id="players-ul"></ul>
+                    </div>
+                    <div id="lobby-controls">
+                        <button onclick="startGame()" id="start-button" disabled>Start Game</button>
+                        <button onclick="leaveGame()">Leave Game</button>
+                    </div>
+                </div>
+                
+                <div id="game-controls" style="display: none;">
+                    <div class="game-info">
+                        <p><strong>Current Player:</strong> <span id="current-player">-</span></p>
+                        <p><strong>Your Color:</strong> <span id="player-color">-</span></p>
+                        <p><strong>Game Status:</strong> <span id="game-status">-</span></p>
+                        <p><strong>Move Count:</strong> <span id="move-count">0</span></p>
+                    </div>
+                    <div class="turn-indicator" id="turn-indicator">
+                        <div class="turn-light" id="turn-light"></div>
+                        <span id="turn-text">Waiting for game to start...</span>
+                    </div>
+                </div>
+                
+                <div id="game-browser" style="display: none;">
+                    <h4>🎯 Available Games</h4>
+                    <div id="games-list"></div>
+                    <button onclick="hideGameBrowser()">Close Browser</button>
+                </div>
+            </div>
+            
+            <div class="board-container">
+                <h3>♟️ Chess Board</h3>
+                <div class="chess-board" id="chess-board">
+                    <!-- Board will be generated by JavaScript -->
+                </div>
+                <div class="emotions" id="emotions">
+                    <h4>💝 Emotions</h4>
+                    <div id="emotion-display">No emotions yet...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="log" id="game-log">
+            <h4>📝 Game Log</h4>
+            <div id="log-entries">
+                <div class="log-entry log-info">Welcome to Emotional Chess! 🎭</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Update this with your deployed backend URL
+        const BACKEND_URL = 'https://your-app.railway.app'; // Update this!
+        
+        let socket = null;
+        let gameState = null;
+        let playerId = null;
+        let gameId = null;
+        let sessionToken = null;
+        let selectedSquare = null;
+        let possibleMoves = [];
+        let playerName = null;
+        let playerColor = null;
+        let isMyTurn = false;
+        let availableGames = [];
+        
+        // Initialize the application
+        function init() {
+            generateChessBoard();
+            connectToServer();
+        }
+        
+        // Generate the chess board
+        function generateChessBoard() {
+            const board = document.getElementById('chess-board');
+            board.innerHTML = '';
+            
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+            
+            for (let rank = 0; rank < 8; rank++) {
+                for (let file = 0; file < 8; file++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(rank + file) % 2 === 0 ? 'light' : 'dark'}`;
+                    square.id = `${files[file]}${ranks[rank]}`;
+                    square.onclick = () => handleSquareClick(square.id);
+                    board.appendChild(square);
+                }
+            }
+        }
+        
+        // Connect to the backend server
+        function connectToServer() {
+            try {
+                socket = io(BACKEND_URL);
+                
+                socket.on('connect', () => {
+                    updateStatus('Connected to server', 'success');
+                    document.getElementById('game-setup').style.display = 'block';
+                });
+                
+                socket.on('disconnect', () => {
+                    updateStatus('Disconnected from server', 'error');
+                });
+                
+                socket.on('game_state', (data) => {
+                    updateGameState(data);
+                });
+                
+                socket.on('move_made', (data) => {
+                    const playerName = getPlayerName(data.player_id);
+                    addLogEntry(`Move: ${data.move} by ${playerName}`, 'move');
+                    updateEmotions(data.emotions);
+                    updateGameState(data.game);
+                    updateTurnIndicator();
+                });
+                
+                socket.on('game_started', (data) => {
+                    addLogEntry('Game started! 🎉', 'info');
+                    updateGameState(data.game);
+                    showGameControls();
+                    updateTurnIndicator();
+                });
+                
+                socket.on('game_ended', (data) => {
+                    addLogEntry(`Game ended! Winner: ${data.winner || 'Draw'}`, 'info');
+                    updateGameState(data.game);
+                    updateTurnIndicator();
+                });
+                
+                socket.on('player_joined', (data) => {
+                    addLogEntry(`${data.player_name} joined the game`, 'info');
+                    updatePlayersList(data.game.players);
+                });
+                
+                socket.on('player_left', (data) => {
+                    addLogEntry(`${data.player_name} left the game`, 'info');
+                    updatePlayersList(data.game.players);
+                });
+                
+                socket.on('error', (data) => {
+                    addLogEntry(`Error: ${data.message}`, 'error');
+                });
+                
+            } catch (error) {
+                updateStatus(`Connection failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Create a new game
+        async function createGame() {
+            const name = document.getElementById('player-name').value.trim();
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            playerName = name;
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/games`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: `${playerName}'s Emotional Chess Game`,
+                        max_players: 2
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    gameId = data.game_id;
+                    addLogEntry(`Game created: ${gameId}`, 'info');
+                    await joinGameWithId(gameId, playerName);
+                } else {
+                    addLogEntry(`Failed to create game: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLogEntry(`Error creating game: ${error.message}`, 'error');
+            }
+        }
+        
+        // Join an existing game by ID
+        async function joinExistingGame() {
+            const name = document.getElementById('player-name').value.trim();
+            const gameIdInput = document.getElementById('game-id-input').value.trim();
+            
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            if (!gameIdInput) {
+                alert('Please enter a game ID');
+                return;
+            }
+            
+            playerName = name;
+            await joinGameWithId(gameIdInput, playerName);
+        }
+        
+        // Browse available games
+        async function listGames() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/games`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    availableGames = data.games;
+                    displayGamesList();
+                    document.getElementById('game-browser').style.display = 'block';
+                } else {
+                    addLogEntry(`Failed to load games: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLogEntry(`Error loading games: ${error.message}`, 'error');
+            }
+        }
+        
+        // Display available games
+        function displayGamesList() {
+            const gamesList = document.getElementById('games-list');
+            gamesList.innerHTML = '';
+            
+            if (availableGames.length === 0) {
+                gamesList.innerHTML = '<p>No games available. Create a new game!</p>';
+                return;
+            }
+            
+            availableGames.forEach(game => {
+                const gameItem = document.createElement('div');
+                gameItem.className = 'game-item';
+                gameItem.onclick = () => joinGameById(game.id);
+                
+                const statusClass = game.status.replace('_', '-');
+                const playerCount = game.players ? game.players.length : 0;
+                
+                gameItem.innerHTML = `
+                    <h5>${game.name}</h5>
+                    <p><strong>Status:</strong> <span class="game-status ${statusClass}">${game.status}</span></p>
+                    <p><strong>Players:</strong> ${playerCount}/${game.max_players}</p>
+                    <p><strong>Created:</strong> ${new Date(game.created_at * 1000).toLocaleString()}</p>
+                `;
+                
+                gamesList.appendChild(gameItem);
+            });
+        }
+        
+        // Join a game by clicking on it
+        async function joinGameById(gameIdToJoin) {
+            const name = document.getElementById('player-name').value.trim();
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            playerName = name;
+            await joinGameWithId(gameIdToJoin, playerName);
+            hideGameBrowser();
+        }
+        
+        // Hide game browser
+        function hideGameBrowser() {
+            document.getElementById('game-browser').style.display = 'none';
+        }
+        
+        // Join an existing game
+        async function joinGame() {
+            const playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            // For demo purposes, we'll create a game and join it
+            await createGame();
+        }
+        
+        // Join a specific game
+        async function joinGameWithId(gameIdToJoin, playerName) {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/games/${gameIdToJoin}/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: playerName
+                        // Color will be assigned automatically by the server
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    playerId = data.player_id;
+                    sessionToken = data.session_token;
+                    gameId = gameIdToJoin;
+                    playerColor = data.color;
+                    addLogEntry(`Joined game as ${playerName} (${playerColor})`, 'info');
+                    showGameLobby();
+                    updateGameState(data.game_state);
+                    
+                    // Join the WebSocket room for this game
+                    if (socket) {
+                        socket.emit('join_game_room', {
+                            game_id: gameId,
+                            player_id: playerId
+                        });
+                    }
+                } else {
+                    addLogEntry(`Failed to join game: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLogEntry(`Error joining game: ${error.message}`, 'error');
+            }
+        }
+        
+        // Start the game
+        async function startGame() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/games/${gameId}/start`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addLogEntry('Game started!', 'info');
+                    updateGameState(data.game);
+                } else {
+                    addLogEntry(`Failed to start game: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLogEntry(`Error starting game: ${error.message}`, 'error');
+            }
+        }
+        
+        // Show game lobby
+        function showGameLobby() {
+            document.getElementById('game-setup').style.display = 'none';
+            document.getElementById('game-lobby').style.display = 'block';
+            document.getElementById('game-controls').style.display = 'none';
+            document.getElementById('game-browser').style.display = 'none';
+        }
+        
+        // Show game controls (during gameplay)
+        function showGameControls() {
+            document.getElementById('game-lobby').style.display = 'none';
+            document.getElementById('game-controls').style.display = 'block';
+        }
+        
+        // Update players list
+        function updatePlayersList(players) {
+            const playersUl = document.getElementById('players-ul');
+            playersUl.innerHTML = '';
+            
+            if (!players || players.length === 0) {
+                playersUl.innerHTML = '<li>No players in game</li>';
+                return;
+            }
+            
+            players.forEach(player => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${player.name}</span>
+                    <div class="player-color ${player.color}"></div>
+                `;
+                playersUl.appendChild(li);
+            });
+            
+            // Enable start button if we have enough players
+            const startButton = document.getElementById('start-button');
+            if (players.length >= 2) {
+                startButton.disabled = false;
+                startButton.textContent = 'Start Game';
+            } else {
+                startButton.disabled = true;
+                startButton.textContent = `Waiting for players (${players.length}/2)`;
+            }
+        }
+        
+        // Update turn indicator
+        function updateTurnIndicator() {
+            const turnLight = document.getElementById('turn-light');
+            const turnText = document.getElementById('turn-text');
+            
+            if (!gameState) {
+                turnLight.className = 'turn-light';
+                turnText.textContent = 'Waiting for game to start...';
+                return;
+            }
+            
+            if (gameState.status === 'waiting') {
+                turnLight.className = 'turn-light waiting';
+                turnText.textContent = 'Waiting for game to start...';
+                return;
+            }
+            
+            if (gameState.status === 'finished') {
+                turnLight.className = 'turn-light';
+                turnText.textContent = 'Game finished!';
+                return;
+            }
+            
+            const currentPlayer = gameState.current_player;
+            const isMyTurn = currentPlayer === playerName;
+            
+            if (isMyTurn) {
+                turnLight.className = 'turn-light active';
+                turnText.textContent = 'Your turn! Make a move.';
+            } else {
+                turnLight.className = 'turn-light waiting';
+                turnText.textContent = `Waiting for ${currentPlayer}...`;
+            }
+        }
+        
+        // Get player name by ID
+        function getPlayerName(playerId) {
+            if (!gameState || !gameState.players) return 'Unknown Player';
+            
+            const player = gameState.players.find(p => p.id === playerId);
+            return player ? player.name : 'Unknown Player';
+        }
+        
+        // Leave the game
+        async function leaveGame() {
+            if (playerId) {
+                try {
+                    await fetch(`${BACKEND_URL}/api/players/${playerId}/leave`, {
+                        method: 'POST'
+                    });
+                    addLogEntry('Left the game', 'info');
+                    resetGame();
+                } catch (error) {
+                    addLogEntry(`Error leaving game: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        // Handle square clicks
+        function handleSquareClick(squareId) {
+            if (!gameState || gameState.status !== 'in_progress') {
+                addLogEntry('Game is not in progress', 'error');
+                return;
+            }
+            
+            // Check if it's the player's turn
+            const currentPlayer = gameState.current_player;
+            if (currentPlayer !== playerName) {
+                addLogEntry(`It's ${currentPlayer}'s turn, not yours!`, 'error');
+                return;
+            }
+            
+            if (selectedSquare === squareId) {
+                // Deselect
+                clearSelection();
+            } else if (selectedSquare) {
+                // Try to make a move
+                const move = `${selectedSquare}${squareId}`;
+                makeMove(move);
+            } else {
+                // Select square
+                selectSquare(squareId);
+            }
+        }
+        
+        // Select a square
+        function selectSquare(squareId) {
+            clearSelection();
+            selectedSquare = squareId;
+            document.getElementById(squareId).classList.add('selected');
+            
+            // Highlight possible moves (simplified)
+            highlightPossibleMoves(squareId);
+        }
+        
+        // Clear selection
+        function clearSelection() {
+            if (selectedSquare) {
+                document.getElementById(selectedSquare).classList.remove('selected');
+            }
+            possibleMoves.forEach(squareId => {
+                document.getElementById(squareId).classList.remove('possible-move');
+            });
+            selectedSquare = null;
+            possibleMoves = [];
+        }
+        
+        // Highlight possible moves (simplified)
+        function highlightPossibleMoves(squareId) {
+            // This is a simplified version - in a real implementation,
+            // you would calculate actual possible moves
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+            
+            const file = squareId[0];
+            const rank = squareId[1];
+            const fileIndex = files.indexOf(file);
+            const rankIndex = ranks.indexOf(rank);
+            
+            // Add some basic possible moves (this is simplified)
+            const moves = [
+                `${files[fileIndex + 1]}${ranks[rankIndex + 1]}`,
+                `${files[fileIndex - 1]}${ranks[rankIndex + 1]}`,
+                `${files[fileIndex + 1]}${ranks[rankIndex - 1]}`,
+                `${files[fileIndex - 1]}${ranks[rankIndex - 1]}`
+            ].filter(move => move.length === 2);
+            
+            moves.forEach(moveId => {
+                const element = document.getElementById(moveId);
+                if (element) {
+                    element.classList.add('possible-move');
+                    possibleMoves.push(moveId);
+                }
+            });
+        }
+        
+        // Make a move
+        async function makeMove(move) {
+            if (!sessionToken) {
+                addLogEntry('Not authenticated', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/games/${gameId}/move`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({
+                        move: move
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addLogEntry(`Move: ${move}`, 'move');
+                    clearSelection();
+                    updateGameState(data.game);
+                } else {
+                    addLogEntry(`Move failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLogEntry(`Error making move: ${error.message}`, 'error');
+            }
+        }
+        
+        // Update game state
+        function updateGameState(state) {
+            gameState = state;
+            
+            if (state.current_player) {
+                document.getElementById('current-player').textContent = state.current_player;
+            }
+            
+            if (state.players) {
+                updatePlayersList(state.players);
+                
+                const player = state.players.find(p => p.id === playerId);
+                if (player) {
+                    document.getElementById('player-color').textContent = player.color;
+                    playerColor = player.color;
+                }
+            }
+            
+            if (state.status) {
+                document.getElementById('game-status').textContent = state.status;
+            }
+            
+            if (state.move_count !== undefined) {
+                document.getElementById('move-count').textContent = state.move_count;
+            }
+            
+            // Update turn indicator
+            updateTurnIndicator();
+            
+            // Show appropriate controls based on game state
+            if (state.status === 'waiting') {
+                showGameLobby();
+            } else if (state.status === 'in_progress') {
+                showGameControls();
+            } else if (state.status === 'finished') {
+                showGameControls();
+            }
+        }
+        
+        // Update emotions display
+        function updateEmotions(emotions) {
+            const emotionDisplay = document.getElementById('emotion-display');
+            if (emotions && typeof emotions === 'object') {
+                emotionDisplay.innerHTML = Object.entries(emotions)
+                    .map(([emotion, count]) => `<span class="emotion-item">${emotion}: ${count}</span>`)
+                    .join(' ');
+            }
+        }
+        
+        // Update status
+        function updateStatus(message, type) {
+            const statusText = document.getElementById('status-text');
+            statusText.textContent = message;
+            statusText.className = type;
+        }
+        
+        // Add log entry
+        function addLogEntry(message, type) {
+            const logEntries = document.getElementById('log-entries');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logEntries.appendChild(entry);
+            logEntries.scrollTop = logEntries.scrollHeight;
+        }
+        
+        // Reset game
+        function resetGame() {
+            gameState = null;
+            playerId = null;
+            gameId = null;
+            sessionToken = null;
+            selectedSquare = null;
+            possibleMoves = [];
+            playerName = null;
+            playerColor = null;
+            isMyTurn = false;
+            availableGames = [];
+            
+            // Show game setup
+            document.getElementById('game-setup').style.display = 'block';
+            document.getElementById('game-lobby').style.display = 'none';
+            document.getElementById('game-controls').style.display = 'none';
+            document.getElementById('game-browser').style.display = 'none';
+            
+            // Clear form
+            document.getElementById('player-name').value = '';
+            document.getElementById('game-id-input').value = '';
+            
+            // Clear players list
+            document.getElementById('players-ul').innerHTML = '';
+            
+            // Reset turn indicator
+            updateTurnIndicator();
+            
+            clearSelection();
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

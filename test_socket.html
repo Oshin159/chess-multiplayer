@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Connection Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🔌 Socket.IO Connection Test</h1>
+    
+    <div id="status" class="status info">Connecting...</div>
+    <div id="details"></div>
+    
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="disconnect()">Disconnect</button>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:5001';
+        let socket = null;
+        
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function addDetail(message) {
+            const detailsDiv = document.getElementById('details');
+            detailsDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+        
+        function testConnection() {
+            updateStatus('Connecting...', 'info');
+            addDetail(`Attempting to connect to: ${BACKEND_URL}`);
+            
+            try {
+                socket = io(BACKEND_URL, {
+                    transports: ['websocket', 'polling'],
+                    timeout: 20000,
+                    forceNew: true
+                });
+                
+                socket.on('connect', () => {
+                    updateStatus('✅ Connected successfully!', 'success');
+                    addDetail('Socket.IO connection established');
+                });
+                
+                socket.on('disconnect', (reason) => {
+                    updateStatus(`❌ Disconnected: ${reason}`, 'error');
+                    addDetail(`Disconnect reason: ${reason}`);
+                });
+                
+                socket.on('connect_error', (error) => {
+                    updateStatus(`❌ Connection failed: ${error.message}`, 'error');
+                    addDetail(`Error details: ${error.message}`);
+                });
+                
+                socket.on('error', (error) => {
+                    addDetail(`Socket error: ${error}`);
+                });
+                
+            } catch (error) {
+                updateStatus(`❌ Failed to create socket: ${error.message}`, 'error');
+                addDetail(`Exception: ${error.message}`);
+            }
+        }
+        
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                addDetail('Manually disconnected');
+            }
+        }
+        
+        // Auto-test on page load
+        window.onload = testConnection;
+    </script>
+</body>
+</html>

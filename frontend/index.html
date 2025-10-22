@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎭 Emotional Chess Multiplayer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -665,7 +665,8 @@
 
     <script>
         // Configuration - Update this with your deployed backend URL
-        const BACKEND_URL = 'https://your-app.railway.app'; // Update this!
+        const BACKEND_URL = 'http://localhost:5001'; // Local development
+        // For production, change to: 'https://your-app.railway.app'
         
         let socket = null;
         let gameState = null;
@@ -790,15 +791,27 @@
         // Connect to the backend server
         function connectToServer() {
             try {
-                socket = io(BACKEND_URL);
+                console.log('Connecting to server:', BACKEND_URL);
+                socket = io(BACKEND_URL, {
+                    transports: ['websocket', 'polling'],
+                    timeout: 20000,
+                    forceNew: true
+                });
                 
                 socket.on('connect', () => {
+                    console.log('Socket.IO connected successfully');
                     updateStatus('Connected to server', 'success');
                     document.getElementById('game-setup').style.display = 'block';
                 });
                 
-                socket.on('disconnect', () => {
-                    updateStatus('Disconnected from server', 'error');
+                socket.on('disconnect', (reason) => {
+                    console.log('Socket.IO disconnected:', reason);
+                    updateStatus(`Disconnected from server: ${reason}`, 'error');
+                });
+                
+                socket.on('connect_error', (error) => {
+                    console.error('Socket.IO connection error:', error);
+                    updateStatus(`Connection failed: ${error.message}`, 'error');
                 });
                 
                 socket.on('game_state', (data) => {

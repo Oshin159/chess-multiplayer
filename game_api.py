@@ -6,6 +6,7 @@ Provides REST API and WebSocket endpoints for multiplayer Emotional Chess games.
 
 from flask import Flask, request, jsonify, g
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_cors import CORS
 import json
 import time
 from typing import Dict, List
@@ -16,6 +17,9 @@ from security import require_session, require_csrf, validate_game_access, rate_l
 # Initialize Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'emotional_chess_secret_key'
+
+# Initialize CORS
+CORS(app, origins="*", supports_credentials=True)
 
 # Initialize SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*")

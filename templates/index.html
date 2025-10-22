@@ -664,9 +664,28 @@
     </div>
 
     <script>
-        // Configuration - Update this with your deployed backend URL
-        const BACKEND_URL = 'http://localhost:5001'; // Local development
-        // For production, change to: 'https://your-app.railway.app'
+        // Configuration - Dynamic backend URL detection
+        const BACKEND_URL = (() => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            
+            console.log('Detected hostname:', hostname);
+            console.log('Detected protocol:', protocol);
+            
+            // Check if we're running on Railway (production)
+            if (hostname.includes('railway.app') || hostname.includes('netlify.app') || hostname !== 'localhost') {
+                // For production deployment, use the same domain
+                const url = `${protocol}//${hostname}`;
+                console.log('Using production backend URL:', url);
+                return url;
+            }
+            // For local development
+            const localUrl = 'http://localhost:5001';
+            console.log('Using local backend URL:', localUrl);
+            return localUrl;
+        })();
+        
+        console.log('Final BACKEND_URL:', BACKEND_URL);
         
         let socket = null;
         let gameState = null;

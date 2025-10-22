@@ -53,7 +53,7 @@ Visit `http://localhost:5001` to play!
 4. Get your backend URL
 
 **Frontend (Netlify):**
-1. Update `BACKEND_URL` in `frontend/index.html`
+1. The frontend automatically detects the backend URL (no manual configuration needed)
 2. Deploy to [Netlify](https://netlify.com)
 3. Get your frontend URL
 
@@ -655,7 +655,7 @@ chess/
 ### **Before Deployment**
 - [ ] Code pushed to GitHub
 - [ ] Environment variables configured
-- [ ] Backend URL updated in frontend
+- [ ] Frontend uses dynamic backend URL detection
 - [ ] Database initialized
 - [ ] Security keys generated
 
@@ -693,7 +693,7 @@ railway variables
 **Frontend not connecting:**
 ```bash
 # Check CORS settings
-# Verify BACKEND_URL in frontend/index.html
+# Check browser console for BACKEND_URL detection logs
 # Test API directly: curl https://your-app.railway.app/api/health
 ```
 

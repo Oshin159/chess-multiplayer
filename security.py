@@ -154,7 +154,7 @@ def require_session(f):
         
         # Validate session token
         from game_api import game_manager
-        session_data = game_manager.validate_session_token(session_token)
+        session_data = game_manager.validate_session(session_token)
         
         if not session_data:
             return jsonify({

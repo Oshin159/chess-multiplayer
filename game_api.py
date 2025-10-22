@@ -140,44 +140,51 @@ def start_game(game_id):
 @rate_limit(max_requests=30, window_minutes=1)
 def make_move(game_id):
     """Make a move in a game."""
-    data = request.get_json()
-    
-    if not data:
-        return jsonify({"success": False, "error": "No JSON data provided"}), 400
-    
-    move = data.get('move')
-    
-    if not move:
-        return jsonify({"success": False, "error": "Move required"}), 400
-    
-    # Get player_id from session
-    player_id = g.player_id
-    
-    game = game_manager.get_game(game_id)
-    
-    if not game:
-        return jsonify({"success": False, "error": "Game not found"}), 404
-    
-    result = game_manager.make_move(player_id, move)
-    
-    if result["success"]:
-        # Notify all players via WebSocket
-        socketio.emit('move_made', {
-            "player_id": player_id,
-            "move": move,
-            "game": game.get_game_state(),
-            "emotions": game.board.emotion_summary()
-        }, room=game_id)
+    try:
+        data = request.get_json()
         
-        # If game is over, notify players
-        if result.get("game_over"):
-            socketio.emit('game_ended', {
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+        
+        move = data.get('move')
+        
+        if not move:
+            return jsonify({"success": False, "error": "Move required"}), 400
+        
+        # Get player_id from session
+        player_id = g.player_id
+        
+        game = game_manager.get_game(game_id)
+        
+        if not game:
+            return jsonify({"success": False, "error": "Game not found"}), 404
+        
+        result = game_manager.make_move(player_id, move)
+        
+        if result["success"]:
+            # Notify all players via WebSocket
+            socketio.emit('move_made', {
+                "player_id": player_id,
+                "move": move,
                 "game": game.get_game_state(),
-                "winner": result.get("winner"),
-                "reason": result.get("reason")
+                "emotions": game.board.emotion_summary()
             }, room=game_id)
+            
+            # If game is over, notify players
+            if result.get("game_over"):
+                socketio.emit('game_ended', {
+                    "game": game.get_game_state(),
+                    "winner": result.get("winner"),
+                    "reason": result.get("reason")
+                }, room=game_id)
+        
+        return jsonify(result)
     
-    return jsonify(result)
+    except Exception as e:
+        print(f"Error in make_move: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": f"Internal server error: {str(e)}"}), 500
 
 
 @app.route('/api/players/<player_id>/game', methods=['GET'])

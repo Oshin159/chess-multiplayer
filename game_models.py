@@ -158,6 +158,10 @@ class Game:
                 # Parse as SAN notation
                 move = self.board.parse_san(move_notation)
             
+            # Check if the move is legal before pushing it
+            if move not in self.board.legal_moves:
+                return {"success": False, "error": "Illegal move"}
+            
             self.board.push(move)
             
             # Record the move

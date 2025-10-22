@@ -185,7 +185,8 @@ class Game:
                     "move": move_notation,
                     "game_over": True,
                     "winner": player.name,
-                    "reason": "checkmate"
+                    "reason": "checkmate",
+                    "game": self.get_game_state()
                 }
             elif self.board.is_stalemate():
                 self.status = GameStatus.FINISHED
@@ -195,7 +196,8 @@ class Game:
                     "move": move_notation,
                     "game_over": True,
                     "winner": None,
-                    "reason": "stalemate"
+                    "reason": "stalemate",
+                    "game": self.get_game_state()
                 }
             
             # Move to next turn
@@ -205,7 +207,8 @@ class Game:
                 "success": True,
                 "move": move_notation,
                 "next_player": self.get_current_player().name if self.get_current_player() else None,
-                "emotions": self.board.emotion_summary()
+                "emotions": self.board.emotion_summary(),
+                "game": self.get_game_state()
             }
             
         except Exception as e:

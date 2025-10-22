@@ -1437,6 +1437,7 @@
                     addLogEntry(`Move: ${move}`, 'move');
                     clearSelection();
                     updateGameState(data.game);
+                    updateBoardPosition(); // Update the visual board
                 } else {
                     addLogEntry(`Move failed: ${data.error}`, 'error');
                 }

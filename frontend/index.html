@@ -70,15 +70,22 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
+            position: relative;
         }
         
         .square:hover {
             transform: scale(1.05);
             box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .square .piece {
+            font-size: 32px;
+            line-height: 1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
         
         .light {
@@ -347,6 +354,137 @@
             cursor: not-allowed;
         }
         
+        .game-info-lobby {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .game-info-lobby h3 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 1.5em;
+        }
+        
+        .game-info-lobby p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .game-info-lobby code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #4caf50;
+        }
+        
+        .join-game-btn {
+            background: linear-gradient(45deg, #4caf50, #45a049);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .join-game-btn:hover {
+            background: linear-gradient(45deg, #45a049, #3d8b40);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .copy-link-btn {
+            background: linear-gradient(45deg, #2196f3, #1976d2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-link-btn:hover {
+            background: linear-gradient(45deg, #1976d2, #1565c0);
+            transform: translateY(-2px);
+        }
+        
+        .rules-btn {
+            background: linear-gradient(45deg, #9c27b0, #7b1fa2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .rules-btn:hover {
+            background: linear-gradient(45deg, #7b1fa2, #6a1b9a);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .rules-content {
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .rules-section {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .rules-section h5 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 1.2em;
+        }
+        
+        .rules-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .rules-section li {
+            margin: 8px 0;
+            color: #f0f0f0;
+            line-height: 1.4;
+        }
+        
+        .rules-section strong {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .game-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .game-actions button {
+            margin: 5px 0;
+        }
+        
         @media (max-width: 768px) {
             .game-section {
                 grid-template-columns: 1fr;
@@ -385,17 +523,33 @@
                     <button onclick="createGame()">Create New Game</button>
                     <button onclick="joinExistingGame()">Join Existing Game</button>
                     <button onclick="listGames()">Browse Games</button>
+                    <button onclick="showGameRules()" class="rules-btn">📖 Game Rules</button>
                 </div>
                 
                 <div id="game-lobby" style="display: none;">
                     <h4>👥 Game Lobby</h4>
+                    <div id="game-info-lobby">
+                        <h3 id="game-name-display">Game Name</h3>
+                        <p><strong>Game ID:</strong> <span id="game-id-display">-</span></p>
+                        <p><strong>Status:</strong> <span id="game-status-lobby">-</span></p>
+                    </div>
                     <div id="players-list">
                         <p><strong>Players in game:</strong></p>
                         <ul id="players-ul"></ul>
                     </div>
+                    <div id="share-game-section" style="display: none;">
+                        <h4>🔗 Share This Game</h4>
+                        <p>Share this link with friends to invite them to join:</p>
+                        <div style="display: flex; gap: 10px; align-items: center; margin: 10px 0;">
+                            <input type="text" id="game-link-input" readonly style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                            <button onclick="copyGameLink()" class="copy-link-btn">Copy Link</button>
+                        </div>
+                    </div>
                     <div id="lobby-controls">
                         <button onclick="startGame()" id="start-button" disabled>Start Game</button>
                         <button onclick="leaveGame()">Leave Game</button>
+                        <button onclick="toggleShareSection()">Share Game</button>
+                        <button onclick="showGameRules()" class="rules-btn">📖 Rules</button>
                     </div>
                 </div>
                 
@@ -410,12 +564,82 @@
                         <div class="turn-light" id="turn-light"></div>
                         <span id="turn-text">Waiting for game to start...</span>
                     </div>
+                    <div class="game-actions">
+                        <button onclick="showGameRules()" class="rules-btn">📖 Rules</button>
+                        <button onclick="leaveGame()">Leave Game</button>
+                    </div>
                 </div>
                 
                 <div id="game-browser" style="display: none;">
                     <h4>🎯 Available Games</h4>
                     <div id="games-list"></div>
                     <button onclick="hideGameBrowser()">Close Browser</button>
+                </div>
+                
+                <div id="game-rules" style="display: none;">
+                    <h4>📖 How to Play Emotional Chess</h4>
+                    <div class="rules-content">
+                        <div class="rules-section">
+                            <h5>🎯 Basic Chess Rules</h5>
+                            <ul>
+                                <li>Each player takes turns moving one piece</li>
+                                <li>Capture opponent pieces by moving to their square</li>
+                                <li>Protect your King from check and checkmate</li>
+                                <li>Win by checkmating the opponent's King</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rules-section">
+                            <h5>❤️ Love Mechanics</h5>
+                            <ul>
+                                <li><strong>Formation:</strong> Pieces within 3 squares can fall in love</li>
+                                <li><strong>Protection:</strong> Lovers cannot capture each other</li>
+                                <li><strong>Defense:</strong> Lovers ignore each other's attack zones</li>
+                                <li><strong>Ending:</strong> Love ends if distance > 3 or either piece is in check</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rules-section">
+                            <h5>😡 Anger Mechanics</h5>
+                            <ul>
+                                <li><strong>Trigger:</strong> When your piece is threatened or captured</li>
+                                <li><strong>Effect:</strong> All nearby allies get +1 movement range</li>
+                                <li><strong>Duration:</strong> Anger lasts for 1 turn only</li>
+                                <li><strong>Exception:</strong> Knights are not affected by anger</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rules-section">
+                            <h5>😢 Sadness Mechanics</h5>
+                            <ul>
+                                <li><strong>Trigger:</strong> When your lover is captured</li>
+                                <li><strong>Effect:</strong> You cannot move for 1 turn</li>
+                                <li><strong>Exception:</strong> Kings cannot become sad</li>
+                                <li><strong>Emergency:</strong> Can move only to resolve check</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rules-section">
+                            <h5>🎮 Multiplayer Features</h5>
+                            <ul>
+                                <li><strong>Turn-based:</strong> Only current player can move</li>
+                                <li><strong>Real-time:</strong> All players see moves instantly</li>
+                                <li><strong>Emotions:</strong> Live emotion tracking during gameplay</li>
+                                <li><strong>Chat:</strong> Game log shows all moves and events</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rules-section">
+                            <h5>💡 Strategy Tips</h5>
+                            <ul>
+                                <li>Use love to protect important pieces</li>
+                                <li>Trigger anger strategically for powerful moves</li>
+                                <li>Be careful not to lose your lover to sadness</li>
+                                <li>Watch the emotion display for tactical advantages</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button onclick="hideGameRules()">Close Rules</button>
                 </div>
             </div>
             
@@ -459,6 +683,23 @@
         function init() {
             generateChessBoard();
             connectToServer();
+            
+            // Check for game ID in URL parameters
+            checkUrlForGameId();
+        }
+        
+        // Check URL for game ID parameter
+        function checkUrlForGameId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameIdParam = urlParams.get('game');
+            
+            if (gameIdParam) {
+                addLogEntry(`Found game ID in URL: ${gameIdParam}`, 'info');
+                document.getElementById('game-id-input').value = gameIdParam;
+                
+                // Auto-focus on player name input
+                document.getElementById('player-name').focus();
+            }
         }
         
         // Generate the chess board
@@ -478,6 +719,72 @@
                     board.appendChild(square);
                 }
             }
+            
+            // Initialize with starting position
+            updateBoardPosition();
+        }
+        
+        // Update board position with pieces
+        function updateBoardPosition() {
+            // Clear all pieces first
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(square => {
+                square.innerHTML = '';
+            });
+            
+            // If we have a game state, use it; otherwise use starting position
+            if (gameState && gameState.board_fen) {
+                renderBoardFromFEN(gameState.board_fen);
+            } else {
+                renderStartingPosition();
+            }
+        }
+        
+        // Render board from FEN notation
+        function renderBoardFromFEN(fen) {
+            const parts = fen.split(' ');
+            const boardState = parts[0];
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+            
+            let rank = 0;
+            let file = 0;
+            
+            for (let i = 0; i < boardState.length; i++) {
+                const char = boardState[i];
+                
+                if (char === '/') {
+                    rank++;
+                    file = 0;
+                } else if (char >= '1' && char <= '8') {
+                    // Empty squares
+                    file += parseInt(char);
+                } else {
+                    // Piece
+                    const squareId = `${files[file]}${ranks[rank]}`;
+                    const square = document.getElementById(squareId);
+                    if (square) {
+                        const pieceSymbol = getPieceSymbol(char);
+                        square.innerHTML = `<span class="piece">${pieceSymbol}</span>`;
+                    }
+                    file++;
+                }
+            }
+        }
+        
+        // Render starting position
+        function renderStartingPosition() {
+            const startingFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+            renderBoardFromFEN(startingFEN);
+        }
+        
+        // Get piece symbol for display
+        function getPieceSymbol(piece) {
+            const pieceSymbols = {
+                'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+                'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+            };
+            return pieceSymbols[piece] || '';
         }
         
         // Connect to the backend server
@@ -503,6 +810,7 @@
                     addLogEntry(`Move: ${data.move} by ${playerName}`, 'move');
                     updateEmotions(data.emotions);
                     updateGameState(data.game);
+                    updateBoardPosition(); // Refresh board after move
                     updateTurnIndicator();
                 });
                 
@@ -553,7 +861,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        name: `${playerName}'s Emotional Chess Game`,
+                        name: `🎭 ${playerName}'s Emotional Chess Game`,
                         max_players: 2
                     })
                 });
@@ -627,10 +935,12 @@
                 const playerCount = game.players ? game.players.length : 0;
                 
                 gameItem.innerHTML = `
-                    <h5>${game.name}</h5>
+                    <h5>🎮 ${game.name}</h5>
+                    <p><strong>Game ID:</strong> <code>${game.id}</code></p>
                     <p><strong>Status:</strong> <span class="game-status ${statusClass}">${game.status}</span></p>
                     <p><strong>Players:</strong> ${playerCount}/${game.max_players}</p>
                     <p><strong>Created:</strong> ${new Date(game.created_at * 1000).toLocaleString()}</p>
+                    <button onclick="joinGameById('${game.id}')" class="join-game-btn">Join This Game</button>
                 `;
                 
                 gamesList.appendChild(gameItem);
@@ -653,6 +963,55 @@
         // Hide game browser
         function hideGameBrowser() {
             document.getElementById('game-browser').style.display = 'none';
+        }
+        
+        // Show game rules
+        function showGameRules() {
+            // Store current context to return to
+            const currentContext = getCurrentContext();
+            
+            document.getElementById('game-rules').style.display = 'block';
+            document.getElementById('game-setup').style.display = 'none';
+            document.getElementById('game-lobby').style.display = 'none';
+            document.getElementById('game-controls').style.display = 'none';
+            document.getElementById('game-browser').style.display = 'none';
+            
+            // Store context for return
+            window.rulesReturnContext = currentContext;
+        }
+        
+        // Get current context
+        function getCurrentContext() {
+            if (document.getElementById('game-setup').style.display !== 'none') return 'setup';
+            if (document.getElementById('game-lobby').style.display !== 'none') return 'lobby';
+            if (document.getElementById('game-controls').style.display !== 'none') return 'controls';
+            if (document.getElementById('game-browser').style.display !== 'none') return 'browser';
+            return 'setup';
+        }
+        
+        // Hide game rules
+        function hideGameRules() {
+            document.getElementById('game-rules').style.display = 'none';
+            
+            // Return to previous context
+            const returnContext = window.rulesReturnContext || 'setup';
+            
+            switch (returnContext) {
+                case 'setup':
+                    document.getElementById('game-setup').style.display = 'block';
+                    break;
+                case 'lobby':
+                    document.getElementById('game-lobby').style.display = 'block';
+                    break;
+                case 'controls':
+                    document.getElementById('game-controls').style.display = 'block';
+                    break;
+                case 'browser':
+                    document.getElementById('game-browser').style.display = 'block';
+                    break;
+                default:
+                    document.getElementById('game-setup').style.display = 'block';
+            }
         }
         
         // Join an existing game
@@ -764,6 +1123,86 @@
             } else {
                 startButton.disabled = true;
                 startButton.textContent = `Waiting for players (${players.length}/2)`;
+            }
+        }
+        
+        // Update game info in lobby
+        function updateGameInfoLobby(gameState) {
+            if (!gameState) return;
+            
+            // Update game name
+            const gameNameDisplay = document.getElementById('game-name-display');
+            if (gameNameDisplay && gameState.name) {
+                gameNameDisplay.textContent = `🎮 ${gameState.name}`;
+            }
+            
+            // Update game ID
+            const gameIdDisplay = document.getElementById('game-id-display');
+            if (gameIdDisplay && gameId) {
+                gameIdDisplay.textContent = gameId;
+            }
+            
+            // Update game status
+            const gameStatusLobby = document.getElementById('game-status-lobby');
+            if (gameStatusLobby && gameState.status) {
+                gameStatusLobby.textContent = gameState.status;
+                gameStatusLobby.className = `game-status ${gameState.status.replace('_', '-')}`;
+            }
+        }
+        
+        // Toggle share section visibility
+        function toggleShareSection() {
+            const shareSection = document.getElementById('share-game-section');
+            const isVisible = shareSection.style.display !== 'none';
+            
+            if (isVisible) {
+                shareSection.style.display = 'none';
+            } else {
+                shareSection.style.display = 'block';
+                updateGameLink();
+            }
+        }
+        
+        // Update game link in share section
+        function updateGameLink() {
+            if (!gameId) return;
+            
+            const gameLink = `${window.location.origin}?game=${gameId}`;
+            const gameLinkInput = document.getElementById('game-link-input');
+            if (gameLinkInput) {
+                gameLinkInput.value = gameLink;
+            }
+        }
+        
+        // Copy game link to clipboard
+        function copyGameLink() {
+            if (!gameId) {
+                addLogEntry('No game ID available', 'error');
+                return;
+            }
+            
+            const gameLink = `${window.location.origin}?game=${gameId}`;
+            
+            // Try to copy to clipboard
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(gameLink).then(() => {
+                    addLogEntry('Game link copied to clipboard!', 'info');
+                }).catch(err => {
+                    addLogEntry('Failed to copy link: ' + err.message, 'error');
+                });
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = gameLink;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    addLogEntry('Game link copied to clipboard!', 'info');
+                } catch (err) {
+                    addLogEntry('Failed to copy link: ' + err.message, 'error');
+                }
+                document.body.removeChild(textArea);
             }
         }
         
@@ -959,6 +1398,14 @@
             
             if (state.move_count !== undefined) {
                 document.getElementById('move-count').textContent = state.move_count;
+            }
+            
+            // Update game info in lobby
+            updateGameInfoLobby(state);
+            
+            // Update board position if we have board data
+            if (state.board_fen) {
+                updateBoardPosition();
             }
             
             // Update turn indicator

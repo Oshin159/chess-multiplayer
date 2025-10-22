@@ -1345,10 +1345,20 @@
             possibleMoves = [];
         }
         
-        // Highlight possible moves (simplified)
+        // Highlight possible moves
         function highlightPossibleMoves(squareId) {
-            // This is a simplified version - in a real implementation,
-            // you would calculate actual possible moves
+            if (!gameState || !gameState.board_fen) {
+                return;
+            }
+            
+            // For now, we'll highlight all squares as potential moves
+            // In a full implementation, you would:
+            // 1. Parse the FEN to get the current board state
+            // 2. Calculate legal moves for the piece at squareId
+            // 3. Highlight only those legal moves
+            
+            // This is a placeholder that highlights adjacent squares
+            // The backend will validate the actual move
             const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
             const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
             
@@ -1357,21 +1367,19 @@
             const fileIndex = files.indexOf(file);
             const rankIndex = ranks.indexOf(rank);
             
-            // Add some basic possible moves (this is simplified)
-            const moves = [
-                `${files[fileIndex + 1]}${ranks[rankIndex + 1]}`,
-                `${files[fileIndex - 1]}${ranks[rankIndex + 1]}`,
-                `${files[fileIndex + 1]}${ranks[rankIndex - 1]}`,
-                `${files[fileIndex - 1]}${ranks[rankIndex - 1]}`
-            ].filter(move => move.length === 2);
-            
-            moves.forEach(moveId => {
-                const element = document.getElementById(moveId);
-                if (element) {
-                    element.classList.add('possible-move');
-                    possibleMoves.push(moveId);
+            // Highlight all squares (the backend will validate the actual move)
+            for (let f = 0; f < 8; f++) {
+                for (let r = 0; r < 8; r++) {
+                    if (f !== fileIndex || r !== rankIndex) {
+                        const moveId = `${files[f]}${ranks[r]}`;
+                        const element = document.getElementById(moveId);
+                        if (element) {
+                            element.classList.add('possible-move');
+                            possibleMoves.push(moveId);
+                        }
+                    }
                 }
-            });
+            }
         }
         
         // Make a move

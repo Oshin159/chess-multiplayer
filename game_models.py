@@ -7,6 +7,7 @@ Defines game state, players, and game management classes with database persisten
 import uuid
 import time
 import json
+import chess
 from typing import Dict, List, Optional, Set
 from dataclasses import dataclass, field
 from enum import Enum
@@ -148,8 +149,15 @@ class Game:
             return {"success": False, "error": "Not your turn"}
         
         try:
-            # Parse and make the move
-            move = self.board.parse_san(move_notation)
+            # Try to parse as coordinate notation first (e.g., "e2e4")
+            if len(move_notation) == 4 and move_notation[0].islower() and move_notation[1].isdigit() and move_notation[2].islower() and move_notation[3].isdigit():
+                from_square = chess.parse_square(move_notation[:2])
+                to_square = chess.parse_square(move_notation[2:])
+                move = chess.Move(from_square, to_square)
+            else:
+                # Parse as SAN notation
+                move = self.board.parse_san(move_notation)
+            
             self.board.push(move)
             
             # Record the move

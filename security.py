@@ -294,6 +294,10 @@ def validate_move_notation(move: str) -> bool:
     # Basic validation - check for common chess move patterns
     move = move.strip()
     
+    # Allow coordinate notation (e.g., "e2e4")
+    if len(move) == 4 and move[0].islower() and move[1].isdigit() and move[2].islower() and move[3].isdigit():
+        return True
+    
     # Allow standard algebraic notation
     import re
     pattern = r'^[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?$'

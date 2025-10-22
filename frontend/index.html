@@ -86,6 +86,32 @@
             font-size: 32px;
             line-height: 1;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .emotion-tag {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 50%;
+            color: white;
+            text-shadow: none;
+            z-index: 10;
+        }
+        
+        .emotion-tag.love {
+            background-color: #e91e63;
+        }
+        
+        .emotion-tag.angry {
+            background-color: #f44336;
+        }
+        
+        .emotion-tag.sad {
+            background-color: #2196f3;
         }
         
         .light {
@@ -698,6 +724,7 @@
         let playerColor = null;
         let isMyTurn = false;
         let availableGames = [];
+        let gameEmotions = null;
         
         // Initialize the application
         function init() {
@@ -745,18 +772,39 @@
         }
         
         // Update board position with pieces
-        function updateBoardPosition() {
+        async function updateBoardPosition() {
             // Clear all pieces first
             const squares = document.querySelectorAll('.square');
             squares.forEach(square => {
                 square.innerHTML = '';
             });
             
+            // Fetch emotions if we have a game
+            if (gameId && gameState && gameState.status === 'in_progress') {
+                await fetchGameEmotions();
+            }
+            
             // If we have a game state, use it; otherwise use starting position
             if (gameState && gameState.board_fen) {
                 renderBoardFromFEN(gameState.board_fen);
             } else {
                 renderStartingPosition();
+            }
+        }
+        
+        // Fetch game emotions
+        async function fetchGameEmotions() {
+            if (!gameId) return;
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/games/${gameId}/emotions`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    gameEmotions = data.emotions;
+                }
+            } catch (error) {
+                console.error('Error fetching emotions:', error);
             }
         }
         
@@ -785,7 +833,8 @@
                     const square = document.getElementById(squareId);
                     if (square) {
                         const pieceSymbol = getPieceSymbol(char);
-                        square.innerHTML = `<span class="piece">${pieceSymbol}</span>`;
+                        const emotionTags = getEmotionTag(gameEmotions, squareId);
+                        square.innerHTML = `<span class="piece">${pieceSymbol}${emotionTags}</span>`;
                     }
                     file++;
                 }
@@ -805,6 +854,26 @@
                 'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
             };
             return pieceSymbols[piece] || '';
+        }
+        
+        // Get emotion tag HTML
+        function getEmotionTag(emotions, squareName) {
+            if (!emotions || !emotions[squareName]) return '';
+            
+            const emotion = emotions[squareName];
+            let tags = '';
+            
+            if (emotion.in_love) {
+                tags += '<span class="emotion-tag love">❤️</span>';
+            }
+            if (emotion.is_angry) {
+                tags += '<span class="emotion-tag angry">😡</span>';
+            }
+            if (emotion.is_sad) {
+                tags += '<span class="emotion-tag sad">😢</span>';
+            }
+            
+            return tags;
         }
         
         // Connect to the backend server

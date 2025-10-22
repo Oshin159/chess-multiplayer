@@ -218,7 +218,7 @@ def get_legal_moves(game_id, square):
         
         # Get legal moves from this square
         legal_moves = []
-        for move in game.board.legal_moves:
+        for move in list(game.board.legal_moves):
             if move.from_square == square_index:
                 legal_moves.append(chess.square_name(move.to_square))
         
@@ -227,9 +227,40 @@ def get_legal_moves(game_id, square):
             "legal_moves": legal_moves,
             "square": square
         })
+
+
+@app.route('/api/games/<game_id>/emotions', methods=['GET'])
+def get_game_emotions(game_id):
+    """Get emotional states for all squares in a game."""
+    try:
+        game = game_manager.get_game(game_id)
+        
+        if not game:
+            return jsonify({"success": False, "error": "Game not found"}), 404
+        
+        if game.status != GameStatus.IN_PROGRESS:
+            return jsonify({"success": False, "error": "Game not in progress"}), 400
+        
+        # Get emotional states for all squares
+        emotions = {}
+        for square in range(64):
+            square_name = chess.square_name(square)
+            emotions[square_name] = {
+                "in_love": game.board.in_love(square),
+                "is_angry": game.board.is_angry(square),
+                "is_sad": game.board.is_sad(square),
+                "love_partner": chess.square_name(game.board.love_partner[square]) if game.board.love_partner[square] is not None else None,
+                "angry_turns": game.board.angry_turns[square],
+                "sad_turns": game.board.sad_turns[square]
+            }
+        
+        return jsonify({
+            "success": True,
+            "emotions": emotions
+        })
     
     except Exception as e:
-        print(f"Error in get_legal_moves: {e}")
+        print(f"Error in get_game_emotions: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": f"Internal server error: {str(e)}"}), 500

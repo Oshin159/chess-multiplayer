@@ -218,7 +218,7 @@ def get_legal_moves(game_id, square):
         
         # Get legal moves from this square
         legal_moves = []
-        for move in list(game.board.legal_moves):
+        for move in game.board.generate_legal_moves():
             if move.from_square == square_index:
                 legal_moves.append(chess.square_name(move.to_square))
         

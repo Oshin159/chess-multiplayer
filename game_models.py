@@ -159,7 +159,8 @@ class Game:
                 move = self.board.parse_san(move_notation)
             
             # Check if the move is legal before pushing it
-            if move not in self.board.legal_moves:
+            legal_moves = self.board.generate_legal_moves()
+            if move not in legal_moves:
                 return {"success": False, "error": "Illegal move"}
             
             self.board.push(move)

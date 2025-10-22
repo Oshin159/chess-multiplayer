@@ -227,6 +227,12 @@ def get_legal_moves(game_id, square):
             "legal_moves": legal_moves,
             "square": square
         })
+    
+    except Exception as e:
+        print(f"Error in get_legal_moves: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": f"Internal server error: {str(e)}"}), 500
 
 
 @app.route('/api/games/<game_id>/emotions', methods=['GET'])

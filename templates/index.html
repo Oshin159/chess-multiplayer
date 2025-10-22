@@ -104,6 +104,16 @@
         
         .emotion-tag.love {
             background-color: #e91e63;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+        }
+        
+        .emotion-tag.love small {
+            font-size: 8px;
+            color: white;
+            margin-top: -2px;
         }
         
         .emotion-tag.angry {
@@ -114,30 +124,7 @@
             background-color: #2196f3;
         }
         
-        /* Love connection line */
-        .love-connection {
-            position: absolute;
-            background: linear-gradient(45deg, #e91e63, #ff4081);
-            height: 3px;
-            z-index: 5;
-            border-radius: 2px;
-            box-shadow: 0 0 5px rgba(233, 30, 99, 0.5);
-        }
-        
-        .love-connection::before {
-            content: '💕';
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            animation: heartbeat 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes heartbeat {
-            0%, 100% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.2); }
-        }
+        /* Love connections are now shown as identifiers on pieces */
         
         /* Captured pieces display */
         .captured-pieces {
@@ -894,57 +881,10 @@
             }
         }
         
-        // Draw love connections between pieces
+        // Love connections are now shown as identifiers on pieces instead of arrows
         function drawLoveConnections() {
-            // Remove existing love connections
-            document.querySelectorAll('.love-connection').forEach(conn => conn.remove());
-            
-            if (!gameEmotions) return;
-            
-            // Find all love pairs
-            const lovePairs = [];
-            for (const [square, emotions] of Object.entries(gameEmotions)) {
-                if (emotions.in_love && emotions.love_partner) {
-                    lovePairs.push([square, emotions.love_partner]);
-                }
-            }
-            
-            // Draw connections for each love pair
-            lovePairs.forEach(([square1, square2]) => {
-                drawLoveConnection(square1, square2);
-            });
-        }
-        
-        // Draw a love connection line between two squares
-        function drawLoveConnection(square1, square2) {
-            const element1 = document.getElementById(square1);
-            const element2 = document.getElementById(square2);
-            
-            if (!element1 || !element2) return;
-            
-            const rect1 = element1.getBoundingClientRect();
-            const rect2 = element2.getBoundingClientRect();
-            const boardRect = document.getElementById('chess-board').getBoundingClientRect();
-            
-            // Calculate positions relative to the board
-            const x1 = rect1.left + rect1.width/2 - boardRect.left;
-            const y1 = rect1.top + rect1.height/2 - boardRect.top;
-            const x2 = rect2.left + rect2.width/2 - boardRect.left;
-            const y2 = rect2.top + rect2.height/2 - boardRect.top;
-            
-            // Calculate line properties
-            const length = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-            const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
-            
-            // Create connection element
-            const connection = document.createElement('div');
-            connection.className = 'love-connection';
-            connection.style.left = x1 + 'px';
-            connection.style.top = y1 + 'px';
-            connection.style.width = length + 'px';
-            connection.style.transform = `rotate(${angle}deg)`;
-            
-            document.getElementById('chess-board').appendChild(connection);
+            // No longer drawing arrows - love identifiers are shown on pieces directly
+            // This function is kept for compatibility but does nothing
         }
         
         // Update captured pieces display
@@ -1032,8 +972,10 @@
             const emotion = emotions[squareName];
             let tags = '';
             
-            if (emotion.in_love) {
-                tags += '<span class="emotion-tag love">❤️</span>';
+            if (emotion.in_love && emotion.love_partner) {
+                // Show love symbol with lover identifier
+                const loverSquare = emotion.love_partner;
+                tags += `<span class="emotion-tag love" title="In love with ${loverSquare}">❤️<small>${loverSquare}</small></span>`;
             }
             if (emotion.is_angry) {
                 tags += '<span class="emotion-tag angry">😡</span>';

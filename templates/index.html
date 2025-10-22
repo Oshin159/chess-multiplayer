@@ -1298,8 +1298,19 @@
         
         // Handle square clicks
         function handleSquareClick(squareId) {
-            if (!gameState || gameState.status !== 'in_progress') {
-                addLogEntry('Game is not in progress', 'error');
+            console.log('Square clicked:', squareId);
+            console.log('Game state:', gameState);
+            console.log('Session token:', sessionToken ? 'Present' : 'Missing');
+            console.log('Player name:', playerName);
+            console.log('Game ID:', gameId);
+            
+            if (!gameState) {
+                addLogEntry('No game state available', 'error');
+                return;
+            }
+            
+            if (gameState.status !== 'in_progress') {
+                addLogEntry(`Game is not in progress (status: ${gameState.status})`, 'error');
                 return;
             }
             
@@ -1316,6 +1327,7 @@
             } else if (selectedSquare) {
                 // Try to make a move
                 const move = `${selectedSquare}${squareId}`;
+                console.log('Making move:', move);
                 makeMove(move);
             } else {
                 // Select square

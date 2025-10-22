@@ -9,6 +9,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 import json
 import time
+import chess
 from typing import Dict, List
 from game_models import GameManager, GameStatus, PlayerStatus
 from security import require_session, require_csrf, validate_game_access, rate_limit, SecurityConfig
@@ -192,6 +193,43 @@ def make_move(game_id):
     
     except Exception as e:
         print(f"Error in make_move: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": f"Internal server error: {str(e)}"}), 500
+
+
+@app.route('/api/games/<game_id>/legal-moves/<square>', methods=['GET'])
+def get_legal_moves(game_id, square):
+    """Get legal moves for a piece on a specific square."""
+    try:
+        game = game_manager.get_game(game_id)
+        
+        if not game:
+            return jsonify({"success": False, "error": "Game not found"}), 404
+        
+        if game.status != GameStatus.IN_PROGRESS:
+            return jsonify({"success": False, "error": "Game not in progress"}), 400
+        
+        # Parse the square (e.g., "e2")
+        try:
+            square_index = chess.parse_square(square)
+        except ValueError:
+            return jsonify({"success": False, "error": "Invalid square"}), 400
+        
+        # Get legal moves from this square
+        legal_moves = []
+        for move in game.board.legal_moves:
+            if move.from_square == square_index:
+                legal_moves.append(chess.square_name(move.to_square))
+        
+        return jsonify({
+            "success": True,
+            "legal_moves": legal_moves,
+            "square": square
+        })
+    
+    except Exception as e:
+        print(f"Error in get_legal_moves: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": f"Internal server error: {str(e)}"}), 500

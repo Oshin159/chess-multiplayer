@@ -1358,19 +1358,37 @@
         }
         
         // Highlight possible moves
-        function highlightPossibleMoves(squareId) {
-            if (!gameState || !gameState.board_fen) {
+        async function highlightPossibleMoves(squareId) {
+            if (!gameState || !gameState.board_fen || !gameId) {
                 return;
             }
             
-            // For now, we'll highlight all squares as potential moves
-            // In a full implementation, you would:
-            // 1. Parse the FEN to get the current board state
-            // 2. Calculate legal moves for the piece at squareId
-            // 3. Highlight only those legal moves
-            
-            // This is a placeholder that highlights adjacent squares
-            // The backend will validate the actual move
+            try {
+                // Get legal moves from the backend
+                const response = await fetch(`${BACKEND_URL}/api/games/${gameId}/legal-moves/${squareId}`);
+                const data = await response.json();
+                
+                if (data.success && data.legal_moves) {
+                    // Highlight only the legal destination squares
+                    data.legal_moves.forEach(destination => {
+                        const element = document.getElementById(destination);
+                        if (element) {
+                            element.classList.add('possible-move');
+                            possibleMoves.push(destination);
+                        }
+                    });
+                } else {
+                    console.log('No legal moves found for square:', squareId);
+                }
+            } catch (error) {
+                console.error('Error fetching legal moves:', error);
+                // Fallback: highlight all squares (backend will validate)
+                highlightAllSquares(squareId);
+            }
+        }
+        
+        // Fallback function to highlight all squares
+        function highlightAllSquares(squareId) {
             const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
             const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
             

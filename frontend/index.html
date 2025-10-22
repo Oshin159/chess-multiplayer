@@ -114,6 +114,78 @@
             background-color: #2196f3;
         }
         
+        /* Love connection line */
+        .love-connection {
+            position: absolute;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            height: 3px;
+            z-index: 5;
+            border-radius: 2px;
+            box-shadow: 0 0 5px rgba(233, 30, 99, 0.5);
+        }
+        
+        .love-connection::before {
+            content: '💕';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); }
+        }
+        
+        /* Captured pieces display */
+        .captured-pieces {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .captured-pieces h4 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 1.2em;
+        }
+        
+        .captured-sides {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .captured-side {
+            flex: 1;
+        }
+        
+        .captured-side h5 {
+            margin: 0 0 8px 0;
+            color: #fff;
+            font-size: 1em;
+        }
+        
+        .captured-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            min-height: 30px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 5px;
+        }
+        
+        .captured-piece {
+            font-size: 24px;
+            line-height: 1;
+            padding: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
         .light {
             background-color: #f0d9b5;
         }
@@ -586,6 +658,19 @@
                         <p><strong>Game Status:</strong> <span id="game-status">-</span></p>
                         <p><strong>Move Count:</strong> <span id="move-count">0</span></p>
                     </div>
+                    <div class="captured-pieces">
+                        <h4>🎯 Captured Pieces</h4>
+                        <div class="captured-sides">
+                            <div class="captured-side">
+                                <h5>White Captured</h5>
+                                <div id="white-captured" class="captured-list"></div>
+                            </div>
+                            <div class="captured-side">
+                                <h5>Black Captured</h5>
+                                <div id="black-captured" class="captured-list"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="turn-indicator" id="turn-indicator">
                         <div class="turn-light" id="turn-light"></div>
                         <span id="turn-text">Waiting for game to start...</span>
@@ -802,9 +887,93 @@
                 
                 if (data.success) {
                     gameEmotions = data.emotions;
+                    drawLoveConnections();
                 }
             } catch (error) {
                 console.error('Error fetching emotions:', error);
+            }
+        }
+        
+        // Draw love connections between pieces
+        function drawLoveConnections() {
+            // Remove existing love connections
+            document.querySelectorAll('.love-connection').forEach(conn => conn.remove());
+            
+            if (!gameEmotions) return;
+            
+            // Find all love pairs
+            const lovePairs = [];
+            for (const [square, emotions] of Object.entries(gameEmotions)) {
+                if (emotions.in_love && emotions.love_partner) {
+                    lovePairs.push([square, emotions.love_partner]);
+                }
+            }
+            
+            // Draw connections for each love pair
+            lovePairs.forEach(([square1, square2]) => {
+                drawLoveConnection(square1, square2);
+            });
+        }
+        
+        // Draw a love connection line between two squares
+        function drawLoveConnection(square1, square2) {
+            const element1 = document.getElementById(square1);
+            const element2 = document.getElementById(square2);
+            
+            if (!element1 || !element2) return;
+            
+            const rect1 = element1.getBoundingClientRect();
+            const rect2 = element2.getBoundingClientRect();
+            const boardRect = document.getElementById('chess-board').getBoundingClientRect();
+            
+            // Calculate positions relative to the board
+            const x1 = rect1.left + rect1.width/2 - boardRect.left;
+            const y1 = rect1.top + rect1.height/2 - boardRect.top;
+            const x2 = rect2.left + rect2.width/2 - boardRect.left;
+            const y2 = rect2.top + rect2.height/2 - boardRect.top;
+            
+            // Calculate line properties
+            const length = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+            const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+            
+            // Create connection element
+            const connection = document.createElement('div');
+            connection.className = 'love-connection';
+            connection.style.left = x1 + 'px';
+            connection.style.top = y1 + 'px';
+            connection.style.width = length + 'px';
+            connection.style.transform = `rotate(${angle}deg)`;
+            
+            document.getElementById('chess-board').appendChild(connection);
+        }
+        
+        // Update captured pieces display
+        function updateCapturedPieces(capturedPieces) {
+            const whiteCaptured = document.getElementById('white-captured');
+            const blackCaptured = document.getElementById('black-captured');
+            
+            // Clear existing pieces
+            whiteCaptured.innerHTML = '';
+            blackCaptured.innerHTML = '';
+            
+            // Add white captured pieces
+            if (capturedPieces.white && capturedPieces.white.length > 0) {
+                capturedPieces.white.forEach(piece => {
+                    const pieceElement = document.createElement('span');
+                    pieceElement.className = 'captured-piece';
+                    pieceElement.textContent = piece;
+                    whiteCaptured.appendChild(pieceElement);
+                });
+            }
+            
+            // Add black captured pieces
+            if (capturedPieces.black && capturedPieces.black.length > 0) {
+                capturedPieces.black.forEach(piece => {
+                    const pieceElement = document.createElement('span');
+                    pieceElement.className = 'captured-piece';
+                    pieceElement.textContent = piece;
+                    blackCaptured.appendChild(pieceElement);
+                });
             }
         }
         
@@ -1539,6 +1708,11 @@
             
             if (state.move_count !== undefined) {
                 document.getElementById('move-count').textContent = state.move_count;
+            }
+            
+            // Update captured pieces
+            if (state.captured_pieces) {
+                updateCapturedPieces(state.captured_pieces);
             }
             
             // Update game info in lobby

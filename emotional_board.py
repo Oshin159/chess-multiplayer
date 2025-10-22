@@ -18,7 +18,7 @@ class EmotionalBoard(chess.Board):
     """
     
     # Configuration constants
-    LOVE_DISTANCE = 3
+    LOVE_DISTANCE = 1  # Only adjacent squares can fall in love
     LOVE_BONUS = 30
     ANGER_BONUS = 10
     SAD_PENALTY = 25
@@ -189,6 +189,18 @@ class EmotionalBoard(chess.Board):
         for move in base_moves:
             from_square = move.from_square
             to_square = move.to_square
+            
+            # Restrict pawn moves to 1 square only (not 2)
+            piece = self.piece_at(from_square)
+            if piece and piece.piece_type == chess.PAWN:
+                # Calculate distance moved
+                from_rank = chess.square_rank(from_square)
+                to_rank = chess.square_rank(to_square)
+                distance = abs(to_rank - from_rank)
+                
+                # Only allow 1 square forward moves for pawns
+                if distance > 1:
+                    continue
             
             # Check if move violates love mechanics
             if self.in_love(from_square):

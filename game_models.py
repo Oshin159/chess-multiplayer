@@ -71,6 +71,7 @@ class Game:
     finished_at: Optional[float] = None
     winner: Optional[str] = None
     move_history: List[Dict] = field(default_factory=list)
+    captured_pieces: Dict[str, List[str]] = field(default_factory=lambda: {"white": [], "black": []})
     
     def __post_init__(self):
         """Initialize game after creation."""
@@ -163,7 +164,24 @@ class Game:
             if move not in legal_moves:
                 return {"success": False, "error": "Illegal move"}
             
+            # Check if a piece was captured and what it was
+            captured_piece = None
+            if self.board.is_capture(move):
+                # Get the piece that will be captured before making the move
+                captured_square = move.to_square
+                captured_piece_obj = self.board.piece_at(captured_square)
+                if captured_piece_obj:
+                    # Convert piece to symbol
+                    piece_symbol = self._get_piece_symbol(captured_piece_obj)
+                    captured_piece = piece_symbol
+            
             self.board.push(move)
+            
+            # Track captured pieces
+            if captured_piece:
+                # Determine which side captured the piece
+                captured_color = "black" if player.color == "white" else "white"
+                self.captured_pieces[captured_color].append(captured_piece)
             
             # Record the move
             move_record = {
@@ -214,6 +232,18 @@ class Game:
         except Exception as e:
             return {"success": False, "error": f"Invalid move: {str(e)}"}
     
+    def _get_piece_symbol(self, piece) -> str:
+        """Convert a chess piece to its symbol."""
+        piece_symbols = {
+            chess.PAWN: "♟" if piece.color else "♙",
+            chess.ROOK: "♜" if piece.color else "♖", 
+            chess.KNIGHT: "♞" if piece.color else "♘",
+            chess.BISHOP: "♝" if piece.color else "♗",
+            chess.QUEEN: "♛" if piece.color else "♕",
+            chess.KING: "♚" if piece.color else "♔"
+        }
+        return piece_symbols.get(piece.piece_type, "?")
+
     def get_game_state(self) -> Dict:
         """Get the current game state."""
         return {
@@ -232,7 +262,8 @@ class Game:
             "created_at": self.created_at,
             "started_at": self.started_at,
             "finished_at": self.finished_at,
-            "winner": self.winner
+            "winner": self.winner,
+            "captured_pieces": self.captured_pieces
         }
     
     def to_dict(self) -> Dict:

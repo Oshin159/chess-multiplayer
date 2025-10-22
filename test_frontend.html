@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎭 Emotional Chess Multiplayer</title>
+    <title>🎭 Emotional Chess Multiplayer - Local Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
         body {
@@ -485,6 +485,19 @@
             margin: 5px 0;
         }
         
+        .test-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #4caf50;
+        }
+        
+        .test-info h3 {
+            color: #4caf50;
+            margin-top: 0;
+        }
+        
         @media (max-width: 768px) {
             .game-section {
                 grid-template-columns: 1fr;
@@ -507,7 +520,22 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎭 Emotional Chess Multiplayer</h1>
+        <h1>🎭 Emotional Chess Multiplayer - Local Test</h1>
+        
+        <div class="test-info">
+            <h3>🧪 Local Testing Mode</h3>
+            <p><strong>Backend URL:</strong> <code>http://localhost:5001</code></p>
+            <p><strong>Status:</strong> <span id="connection-status">Connecting...</span></p>
+            <p><strong>Features to Test:</strong></p>
+            <ul>
+                <li>✅ Chess pieces rendering with Unicode symbols</li>
+                <li>✅ Game rules section with emotional mechanics</li>
+                <li>✅ Multiplayer game creation and joining</li>
+                <li>✅ Real-time WebSocket communication</li>
+                <li>✅ Game sharing with copy-paste links</li>
+                <li>✅ Responsive design for mobile/desktop</li>
+            </ul>
+        </div>
         
         <div class="game-section">
             <div class="controls">
@@ -659,13 +687,14 @@
             <h4>📝 Game Log</h4>
             <div id="log-entries">
                 <div class="log-entry log-info">Welcome to Emotional Chess! 🎭</div>
+                <div class="log-entry log-info">Local test mode - Backend: http://localhost:5001</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuration - Update this with your deployed backend URL
-        const BACKEND_URL = 'https://your-app.railway.app'; // Update this!
+        // Configuration - Local testing
+        const BACKEND_URL = 'http://localhost:5001';
         
         let socket = null;
         let gameState = null;

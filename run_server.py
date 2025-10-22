@@ -31,19 +31,25 @@ def main():
     def index():
         """Serve the main game page."""
         try:
-            with open('templates/index.html', 'r') as f:
+            # Try frontend/index.html first
+            with open('frontend/index.html', 'r') as f:
                 return f.read()
         except FileNotFoundError:
-            return """
-            <html>
-                <head><title>Emotional Chess</title></head>
-                <body>
-                    <h1>🎭 Emotional Chess Multiplayer</h1>
-                    <p>Server is running! The game interface should be available.</p>
-                    <p>Make sure templates/index.html exists.</p>
-                </body>
-            </html>
-            """, 200
+            try:
+                # Fallback to templates/index.html
+                with open('templates/index.html', 'r') as f:
+                    return f.read()
+            except FileNotFoundError:
+                return """
+                <html>
+                    <head><title>Emotional Chess</title></head>
+                    <body>
+                        <h1>🎭 Emotional Chess Multiplayer</h1>
+                        <p>Server is running! The game interface should be available.</p>
+                        <p>Make sure frontend/index.html exists.</p>
+                    </body>
+                </html>
+                """, 200
     
     # Run the server
     try:

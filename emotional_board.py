@@ -175,9 +175,9 @@ class EmotionalBoard(chess.Board):
         for square in range(64):
             piece = self.piece_at(square)
             if (piece and piece.color == captured_color and square != captured_square):
-                # Check if this piece is close to the captured square
-                if self.chebyshev_distance(captured_square, square) <= 2:
-                    # Make nearby allies angry when a friendly piece is captured
+                # Check if this piece is adjacent (1 Chebyshev distance)
+                if self.chebyshev_distance(captured_square, square) == 1:
+                    # Make adjacent allies angry when a friendly piece is captured
                     self.angry_turns[square] = 3  # Angry for 3 turns
                     self.log_emotion_event("anger_triggered", square, None)
     

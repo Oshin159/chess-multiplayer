@@ -147,7 +147,7 @@ class EmotionalBoard(chess.Board):
             if self.sad_turns[i] > 0:
                 self.sad_turns[i] -= 1
         
-        # Trigger sadness when a piece's lover becomes angry
+        # Simplified sadness - just track emotional states without blocking moves
         for square in range(64):
             piece = self.piece_at(square)
             if piece is None:
@@ -156,7 +156,7 @@ class EmotionalBoard(chess.Board):
             # Check if this piece is in love
             if self.in_love(square):
                 partner = self.love_partner[square]
-                # If the lover is angry, this piece becomes sad
+                # If the lover is angry, this piece becomes sad (but can still move)
                 if self.is_angry(partner):
                     self.sad_turns[square] = 2  # Sad for 2 turns
                     self.log_emotion_event("sadness_triggered", square, None)
@@ -212,24 +212,14 @@ class EmotionalBoard(chess.Board):
                 if distance > 1:
                     continue
             
-            # Check if move violates love mechanics
+            # Simplified emotional mechanics to prevent game getting stuck
+            # Only basic love restriction - cannot capture lover
             if self.in_love(from_square):
                 lover = self.love_partner[from_square]
-                # Cannot capture lover
                 if to_square == lover:
                     continue
-                # Cannot check lover's king
-                if self.piece_at(to_square) and self.piece_at(to_square).piece_type == chess.KING:
-                    target_king_color = self.piece_at(to_square).color
-                    if self.piece_at(lover) and self.piece_at(lover).color == target_king_color:
-                        continue
             
-            # Check sadness restrictions
-            if self.is_sad(from_square):
-                # Sad pieces cannot move (simplified to prevent game getting stuck)
-                continue
-            
-            # Add anger bonus moves
+            # Add anger bonus moves (simplified)
             if self.is_angry(from_square):
                 # Add +1 range moves for angry pieces (except knights)
                 piece = self.piece_at(from_square)

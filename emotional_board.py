@@ -147,10 +147,19 @@ class EmotionalBoard(chess.Board):
             if self.sad_turns[i] > 0:
                 self.sad_turns[i] -= 1
         
-        # Trigger sadness when pieces lose their love partners
-        # This should only happen when a love partner is captured, not when love is formed
-        # The sadness from love loss is handled in _handle_capture_emotions
-        pass
+        # Trigger sadness when a piece's lover becomes angry
+        for square in range(64):
+            piece = self.piece_at(square)
+            if piece is None:
+                continue
+                
+            # Check if this piece is in love
+            if self.in_love(square):
+                partner = self.love_partner[square]
+                # If the lover is angry, this piece becomes sad
+                if self.is_angry(partner):
+                    self.sad_turns[square] = 2  # Sad for 2 turns
+                    self.log_emotion_event("sadness_triggered", square, None)
     
     def _handle_capture_emotions(self, captured_square: int, captured_piece):
         """Handle emotional effects when a piece is captured."""
@@ -158,13 +167,7 @@ class EmotionalBoard(chess.Board):
         if self.in_love(captured_square):
             lover = self.love_partner[captured_square]
             if lover is not None:
-                # Lover becomes sad (unless it's a king)
-                piece = self.piece_at(lover)
-                if piece and piece.piece_type != chess.KING:
-                    self.sad_turns[lover] = 1
-                    self.log_emotion_event("sadness_triggered", lover)
-                
-                # Clear love relationship
+                # Clear love relationship when a piece in love is captured
                 self.love_partner[captured_square] = None
                 self.love_partner[lover] = None
                 self.log_emotion_event("love_broken", captured_square, lover)
@@ -223,25 +226,8 @@ class EmotionalBoard(chess.Board):
             
             # Check sadness restrictions
             if self.is_sad(from_square):
-                # Sad pieces cannot move unless in check
-                # Check if the current player's king is in check
-                piece = self.piece_at(from_square)
-                if piece:
-                    # Find the king of the same color
-                    king_in_check = False
-                    for square in range(64):
-                        king_piece = self.piece_at(square)
-                        if king_piece and king_piece.piece_type == chess.KING and king_piece.color == piece.color:
-                            # Check if this king is in check
-                            king_in_check = self.is_check()
-                            break
-                    
-                    if not king_in_check:
-                        continue
-                
-                # If in check, can only move to resolve check
-                if self._would_place_king_in_check(move):
-                    continue
+                # Sad pieces cannot move (simplified to prevent game getting stuck)
+                continue
             
             # Add anger bonus moves
             if self.is_angry(from_square):

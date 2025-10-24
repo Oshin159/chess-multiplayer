@@ -136,9 +136,21 @@ class EmotionalBoard(chess.Board):
             if self.angry_turns[i] > 0:
                 self.angry_turns[i] -= 1
         
-        # Check for new anger triggers (simplified implementation)
-        # In a full implementation, this would check for captures and threats
-        pass
+        # Check for new anger triggers
+        # Anger triggers when a piece of the same color is captured
+        # or when pieces are under threat
+        for square in range(64):
+            piece = self.piece_at(square)
+            if piece is None:
+                continue
+                
+            # Check if this piece's color just lost a piece (simplified)
+            # In a real implementation, we'd track the previous board state
+            # For now, we'll trigger anger randomly to test the mechanics
+            import random
+            if random.random() < 0.1:  # 10% chance per piece per turn
+                self.angry_turns[square] = 3  # Angry for 3 turns
+                self.log_emotion_event("anger_triggered", square, None)
     
     def apply_sadness(self):
         """Apply sadness effects and update sad turn counters."""
@@ -146,6 +158,25 @@ class EmotionalBoard(chess.Board):
         for i in range(64):
             if self.sad_turns[i] > 0:
                 self.sad_turns[i] -= 1
+        
+        # Trigger sadness when pieces lose their love partners
+        for square in range(64):
+            piece = self.piece_at(square)
+            if piece is None:
+                continue
+                
+            # Check if this piece was in love but partner is gone
+            if self.in_love(square):
+                partner = self.love_partner[square]
+                partner_piece = self.piece_at(partner)
+                if partner_piece is None or partner_piece.color != piece.color:
+                    # Partner is gone or different color, trigger sadness
+                    self.sad_turns[square] = 2  # Sad for 2 turns
+                    self.log_emotion_event("sadness_triggered", square, None)
+                    # Break the love bond
+                    self.love_partner[square] = None
+                    if partner < 64:
+                        self.love_partner[partner] = None
     
     def _handle_capture_emotions(self, captured_square: int):
         """Handle emotional effects when a piece is captured."""

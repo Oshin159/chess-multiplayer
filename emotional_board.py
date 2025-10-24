@@ -166,7 +166,7 @@ class EmotionalBoard(chess.Board):
                     if partner < 64:
                         self.love_partner[partner] = None
     
-    def _handle_capture_emotions(self, captured_square: int):
+    def _handle_capture_emotions(self, captured_square: int, captured_piece):
         """Handle emotional effects when a piece is captured."""
         # Check if captured piece was in love
         if self.in_love(captured_square):
@@ -184,13 +184,14 @@ class EmotionalBoard(chess.Board):
                 self.log_emotion_event("love_broken", captured_square, lover)
         
         # Trigger anger in nearby allies of the captured piece
-        # Note: captured_piece is the piece that was captured, so we need to find allies of the same color
+        # Only make pieces of the SAME color as the captured piece angry
+        captured_color = captured_piece.color
         for square in range(64):
             piece = self.piece_at(square)
-            if piece and square != captured_square:
+            if (piece and piece.color == captured_color and square != captured_square):
                 # Check if this piece is close to the captured square
                 if self.chebyshev_distance(captured_square, square) <= 2:
-                    # Make nearby pieces angry when a piece is captured
+                    # Make nearby allies angry when a friendly piece is captured
                     self.angry_turns[square] = 3  # Angry for 3 turns
                     self.log_emotion_event("anger_triggered", square, None)
     
@@ -340,7 +341,7 @@ class EmotionalBoard(chess.Board):
         
         # Handle emotional effects of capture
         if captured_piece:
-            self._handle_capture_emotions(captured_square)
+            self._handle_capture_emotions(captured_square, captured_piece)
         
         # Update emotional states
         self.update_love_states()

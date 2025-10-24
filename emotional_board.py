@@ -136,21 +136,9 @@ class EmotionalBoard(chess.Board):
             if self.angry_turns[i] > 0:
                 self.angry_turns[i] -= 1
         
-        # Check for new anger triggers
-        # Anger triggers when a piece of the same color is captured
-        # or when pieces are under threat
-        for square in range(64):
-            piece = self.piece_at(square)
-            if piece is None:
-                continue
-                
-            # Check if this piece's color just lost a piece (simplified)
-            # In a real implementation, we'd track the previous board state
-            # For now, we'll trigger anger randomly to test the mechanics
-            import random
-            if random.random() < 0.1:  # 10% chance per piece per turn
-                self.angry_turns[square] = 3  # Angry for 3 turns
-                self.log_emotion_event("anger_triggered", square, None)
+        # Anger should only trigger when a piece of the same color is captured
+        # This will be handled in _handle_capture_emotions instead
+        # No random triggering here
     
     def apply_sadness(self):
         """Apply sadness effects and update sad turn counters."""
@@ -195,15 +183,16 @@ class EmotionalBoard(chess.Board):
                 self.love_partner[lover] = None
                 self.log_emotion_event("love_broken", captured_square, lover)
         
-        # Trigger anger in nearby allies
-        captured_piece = self.piece_at(captured_square)
-        if captured_piece:
-            for square in range(64):
-                piece = self.piece_at(square)
-                if (piece and piece.color == captured_piece.color and 
-                    self.chebyshev_distance(captured_square, square) <= 3):
-                    self.angry_turns[square] = 1
-                    self.log_emotion_event("anger_triggered", square)
+        # Trigger anger in nearby allies of the captured piece
+        # Note: captured_piece is the piece that was captured, so we need to find allies of the same color
+        for square in range(64):
+            piece = self.piece_at(square)
+            if piece and square != captured_square:
+                # Check if this piece is close to the captured square
+                if self.chebyshev_distance(captured_square, square) <= 2:
+                    # Make nearby pieces angry when a piece is captured
+                    self.angry_turns[square] = 3  # Angry for 3 turns
+                    self.log_emotion_event("anger_triggered", square, None)
     
     def log_emotion_event(self, event_type: str, square_a: int, square_b: int = None):
         """Log emotional events for debugging."""

@@ -148,23 +148,9 @@ class EmotionalBoard(chess.Board):
                 self.sad_turns[i] -= 1
         
         # Trigger sadness when pieces lose their love partners
-        for square in range(64):
-            piece = self.piece_at(square)
-            if piece is None:
-                continue
-                
-            # Check if this piece was in love but partner is gone
-            if self.in_love(square):
-                partner = self.love_partner[square]
-                partner_piece = self.piece_at(partner)
-                if partner_piece is None or partner_piece.color != piece.color:
-                    # Partner is gone or different color, trigger sadness
-                    self.sad_turns[square] = 2  # Sad for 2 turns
-                    self.log_emotion_event("sadness_triggered", square, None)
-                    # Break the love bond
-                    self.love_partner[square] = None
-                    if partner < 64:
-                        self.love_partner[partner] = None
+        # This should only happen when a love partner is captured, not when love is formed
+        # The sadness from love loss is handled in _handle_capture_emotions
+        pass
     
     def _handle_capture_emotions(self, captured_square: int, captured_piece):
         """Handle emotional effects when a piece is captured."""
